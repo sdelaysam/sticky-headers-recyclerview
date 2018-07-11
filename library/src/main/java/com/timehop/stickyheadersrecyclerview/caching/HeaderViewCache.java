@@ -15,7 +15,7 @@ import com.timehop.stickyheadersrecyclerview.util.OrientationProvider;
 public class HeaderViewCache implements HeaderProvider {
 
   private final StickyRecyclerHeadersAdapter mAdapter;
-  private final LongSparseArray<View> mHeaderViews = new LongSparseArray<>();
+  private final LongSparseArray<RecyclerView.ViewHolder> mHeaderViews = new LongSparseArray<>();
   private final OrientationProvider mOrientationProvider;
 
   public HeaderViewCache(StickyRecyclerHeadersAdapter adapter,
@@ -25,18 +25,19 @@ public class HeaderViewCache implements HeaderProvider {
   }
 
   @Override
-  public View getHeader(RecyclerView parent, int position) {
+  public RecyclerView.ViewHolder getHeaderViewHolder(RecyclerView parent, int position) {
     long headerId = mAdapter.getHeaderId(position);
 
-    View header = mHeaderViews.get(headerId);
+    RecyclerView.ViewHolder header = mHeaderViews.get(headerId);
     if (header == null) {
       //TODO - recycle views
-      RecyclerView.ViewHolder viewHolder = mAdapter.onCreateHeaderViewHolder(parent);
-      mAdapter.onBindHeaderViewHolder(viewHolder, position);
-      header = viewHolder.itemView;
-      if (header.getLayoutParams() == null) {
-        header.setLayoutParams(new ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+      header = mAdapter.onCreateHeaderViewHolder(parent);
+      mAdapter.onBindHeaderViewHolder(header, position);
+
+      View view = header.itemView;
+      if (view.getLayoutParams() == null) {
+        view.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
       }
 
       int widthSpec;
@@ -51,14 +52,19 @@ public class HeaderViewCache implements HeaderProvider {
       }
 
       int childWidth = ViewGroup.getChildMeasureSpec(widthSpec,
-          parent.getPaddingLeft() + parent.getPaddingRight(), header.getLayoutParams().width);
+              parent.getPaddingLeft() + parent.getPaddingRight(), view.getLayoutParams().width);
       int childHeight = ViewGroup.getChildMeasureSpec(heightSpec,
-          parent.getPaddingTop() + parent.getPaddingBottom(), header.getLayoutParams().height);
-      header.measure(childWidth, childHeight);
-      header.layout(0, 0, header.getMeasuredWidth(), header.getMeasuredHeight());
+              parent.getPaddingTop() + parent.getPaddingBottom(), view.getLayoutParams().height);
+      view.measure(childWidth, childHeight);
+      view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
       mHeaderViews.put(headerId, header);
     }
     return header;
+  }
+
+  @Override
+  public View getHeader(RecyclerView parent, int position) {
+    return getHeaderViewHolder(parent, position).itemView;
   }
 
   @Override

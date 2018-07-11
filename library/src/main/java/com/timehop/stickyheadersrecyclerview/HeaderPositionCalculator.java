@@ -94,9 +94,9 @@ public class HeaderPositionCalculator {
     return position < 0 || position >= mAdapter.getItemCount();
   }
 
-  public void initHeaderBounds(Rect bounds, RecyclerView recyclerView, View header, View firstView, boolean firstHeader) {
+  public int initHeaderBounds(Rect bounds, RecyclerView recyclerView, View header, View firstView, boolean firstHeader) {
     int orientation = mOrientationProvider.getOrientation(recyclerView);
-    initDefaultHeaderOffset(bounds, recyclerView, header, firstView, orientation);
+    int overscroll = initDefaultHeaderOffset(bounds, recyclerView, header, firstView, orientation);
 
     if (firstHeader && isStickyHeaderBeingPushedOffscreen(recyclerView, header)) {
       View viewAfterNextHeader = getFirstViewUnobscuredByHeader(recyclerView, header);
@@ -105,10 +105,11 @@ public class HeaderPositionCalculator {
       translateHeaderWithNextHeader(recyclerView, mOrientationProvider.getOrientation(recyclerView), bounds,
           header, viewAfterNextHeader, secondHeader);
     }
+    return overscroll;
   }
 
-  private void initDefaultHeaderOffset(Rect headerMargins, RecyclerView recyclerView, View header, View firstView, int orientation) {
-    int translationX, translationY;
+  private int initDefaultHeaderOffset(Rect headerMargins, RecyclerView recyclerView, View header, View firstView, int orientation) {
+    int translationX, translationY, rawTranslation, restriction;
     mDimensionCalculator.initMargins(mTempRect1, header);
 
     ViewGroup.LayoutParams layoutParams = firstView.getLayoutParams();
@@ -121,19 +122,23 @@ public class HeaderPositionCalculator {
     }
 
     if (orientation == LinearLayoutManager.VERTICAL) {
+      rawTranslation = firstView.getTop() - topMargin - header.getHeight() - mTempRect1.bottom;
+      restriction = getListTop(recyclerView) + mTempRect1.top;
+
       translationX = firstView.getLeft() - leftMargin + mTempRect1.left;
-      translationY = Math.max(
-          firstView.getTop() - topMargin - header.getHeight() - mTempRect1.bottom,
-          getListTop(recyclerView) + mTempRect1.top);
+      translationY = Math.max(rawTranslation, restriction);
     } else {
+      rawTranslation = firstView.getLeft() - leftMargin - header.getWidth() - mTempRect1.right;
+      restriction = getListLeft(recyclerView) + mTempRect1.left;
+
       translationY = firstView.getTop() - topMargin + mTempRect1.top;
-      translationX = Math.max(
-          firstView.getLeft() - leftMargin - header.getWidth() - mTempRect1.right,
-          getListLeft(recyclerView) + mTempRect1.left);
+      translationX = Math.max(rawTranslation, restriction);
     }
 
     headerMargins.set(translationX, translationY, translationX + header.getWidth(),
             translationY + header.getHeight());
+
+    return Math.max(restriction - rawTranslation, 0);
   }
 
   private boolean isStickyHeaderBeingPushedOffscreen(RecyclerView recyclerView, View stickyHeader) {

@@ -156,6 +156,10 @@ public class MainActivity extends AppCompatActivity {
       holder.itemView.setBackgroundColor(getRandomColor());
     }
 
+    @Override
+    public void onHeaderOverscroll(RecyclerView.ViewHolder holder, int overscroll) {
+    }
+
     private int getRandomColor() {
       SecureRandom rgen = new SecureRandom();
       return Color.HSVToColor(150, new float[]{

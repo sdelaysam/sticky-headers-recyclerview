@@ -112,15 +112,16 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
 
       boolean hasStickyHeader = mHeaderPositionCalculator.hasStickyHeader(itemView, mOrientationProvider.getOrientation(parent), position);
       if (hasStickyHeader || mHeaderPositionCalculator.hasNewHeader(position, mOrientationProvider.isReverseLayout(parent))) {
-        View header = mHeaderProvider.getHeader(parent, position);
+        RecyclerView.ViewHolder header = mHeaderProvider.getHeaderViewHolder(parent, position);
         //re-use existing Rect, if any.
         Rect headerOffset = mHeaderRects.get(position);
         if (headerOffset == null) {
           headerOffset = new Rect();
           mHeaderRects.put(position, headerOffset);
         }
-        mHeaderPositionCalculator.initHeaderBounds(headerOffset, parent, header, itemView, hasStickyHeader);
-        mRenderer.drawHeader(parent, canvas, header, headerOffset);
+        int overscroll = mHeaderPositionCalculator.initHeaderBounds(headerOffset, parent, header.itemView, itemView, hasStickyHeader);
+        mRenderer.drawHeader(parent, canvas, header.itemView, headerOffset);
+        mAdapter.onHeaderOverscroll(header, overscroll);
       }
     }
   }

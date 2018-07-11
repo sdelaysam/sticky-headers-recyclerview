@@ -17,7 +17,16 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:recyclerview-v7:${rootProject.supportLibsVersion}"
+    implementation "com.android.support:recyclerview-v7:${rootProject.supportLibsVersion}"
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
 }
 
 apply from: 'gradle-maven-push.gradle'
