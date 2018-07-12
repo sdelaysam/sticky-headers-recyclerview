@@ -120,8 +120,8 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
           mHeaderRects.put(position, headerOffset);
         }
         int overscroll = mHeaderPositionCalculator.initHeaderBounds(headerOffset, parent, header.itemView, itemView, hasStickyHeader);
-        mRenderer.drawHeader(parent, canvas, header.itemView, headerOffset);
         mAdapter.onHeaderOverscroll(header, overscroll);
+        mRenderer.drawHeader(parent, canvas, header.itemView, headerOffset);
       }
     }
   }
