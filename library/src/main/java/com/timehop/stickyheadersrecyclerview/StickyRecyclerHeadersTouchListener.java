@@ -1,6 +1,7 @@
 package com.timehop.stickyheadersrecyclerview;
 
 import android.graphics.Rect;
+import android.support.annotation.IdRes;
 import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -13,6 +14,8 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
   private final RecyclerView mRecyclerView;
   private final StickyRecyclerHeadersDecoration mDecor;
   private OnHeaderClickListener mOnHeaderClickListener;
+  private OnHeaderClickListener mOnHeaderViewClickListener;
+  private int mHeaderViewId = 0;
 
   public interface OnHeaderClickListener {
     void onHeaderClick(View header, int position, long headerId);
@@ -40,9 +43,14 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
     mOnHeaderClickListener = listener;
   }
 
+  public void setOnHeaderViewClickListener(@IdRes int viewId, OnHeaderClickListener listener) {
+    mOnHeaderViewClickListener = listener;
+    mHeaderViewId = viewId;
+  }
+
   @Override
   public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent e) {
-    if (this.mOnHeaderClickListener != null) {
+    if (this.mOnHeaderClickListener != null || this.mOnHeaderViewClickListener != null) {
       boolean tapDetectorResponse = this.mTapDetector.onTouchEvent(e);
       if (tapDetectorResponse) {
         // Don't return false if a single tap is detected
@@ -65,20 +73,34 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
 
   private class SingleTapDetector extends GestureDetector.SimpleOnGestureListener {
 
-    int clickX = 0;
-    int clickY = 0;
-
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-      clickX = (int) e.getX();
-      clickY = (int) e.getY();
+      int clickX = (int) e.getX();
+      int clickY = (int) e.getY();
       int position = mDecor.findHeaderPositionUnder(clickX, clickY);
       if (position != -1) {
         View headerView = mDecor.getHeaderView(mRecyclerView, position);
         long headerId = getAdapter().getHeaderId(position);
-        mOnHeaderClickListener.onHeaderClick(headerView, position, headerId);
-        mRecyclerView.playSoundEffect(SoundEffectConstants.CLICK);
-        click(headerView, mDecor.getHeaderRectAtPosition(position));
+        if (mOnHeaderClickListener != null) {
+          mOnHeaderClickListener.onHeaderClick(headerView, position, headerId);
+          mRecyclerView.playSoundEffect(SoundEffectConstants.CLICK);
+        }
+        if (mOnHeaderViewClickListener != null && mHeaderViewId > 0) {
+          if (headerView instanceof ViewGroup) {
+            ViewGroup viewGroup = (ViewGroup) headerView;
+            View clickView = viewGroup.findViewById(mHeaderViewId);
+            if (clickView != null) {
+              Rect r = new Rect();
+              clickView.getDrawingRect(r);
+              viewGroup.offsetDescendantRectToMyCoords(clickView, r);
+              Rect headerRect = mDecor.getHeaderRectAtPosition(position);
+              r.offset(headerRect.left, headerRect.top);
+              if (r.contains(clickX, clickY)) {
+                mOnHeaderViewClickListener.onHeaderClick(headerView, position, headerId);
+              }
+            }
+          }
+        }
         return true;
       }
       return false;
@@ -88,29 +110,5 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
     public boolean onDoubleTap(MotionEvent e) {
       return true;
     }
-
-    private boolean click(View view, Rect rect) {
-      if (view instanceof ViewGroup) {
-        ViewGroup viewGroup = (ViewGroup) view;
-          for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            View child = viewGroup.getChildAt(i);
-            Rect r = new Rect();
-            child.getHitRect(r);
-            r.offset(rect.left, rect.top);
-            if (click(child, r)) {
-              return true;
-            }
-          }
-        return false;
-      } else {
-        if (view.isClickable() && view.isEnabled()) {
-          if (rect.contains(clickX, clickY)) {
-            return view.performClick();
-          }
-        }
-        return false;
-      }
-    }
-
   }
 }

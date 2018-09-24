@@ -19,6 +19,7 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
   private final StickyRecyclerHeadersAdapter mAdapter;
   private final ItemVisibilityAdapter mVisibilityAdapter;
   private final SparseArray<Rect> mHeaderRects = new SparseArray<>();
+  private final SparseArray<Rect> mVisibleHeaderRects = new SparseArray<>();
   private final HeaderProvider mHeaderProvider;
   private final OrientationProvider mOrientationProvider;
   private final HeaderPositionCalculator mHeaderPositionCalculator;
@@ -97,7 +98,7 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
   @Override
   public void onDrawOver(Canvas canvas, RecyclerView parent, RecyclerView.State state) {
     super.onDrawOver(canvas, parent, state);
-
+    mVisibleHeaderRects.clear();
     final int childCount = parent.getChildCount();
     if (childCount <= 0 || mAdapter.getItemCount() <= 0) {
       return;
@@ -122,6 +123,7 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
         int overscroll = mHeaderPositionCalculator.initHeaderBounds(headerOffset, parent, header.itemView, itemView, hasStickyHeader);
         mAdapter.onHeaderOverscroll(header, overscroll);
         mRenderer.drawHeader(parent, canvas, header.itemView, headerOffset);
+        mVisibleHeaderRects.put(position, headerOffset);
       }
     }
   }
@@ -134,10 +136,10 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
    * @return position of header, or -1 if not found
    */
   public int findHeaderPositionUnder(int x, int y) {
-    for (int i = mHeaderRects.size() - 1; i >= 0; i--) {
-      Rect rect = mHeaderRects.get(mHeaderRects.keyAt(i));
+    for (int i = 0; i < mVisibleHeaderRects.size(); i++) {
+      Rect rect = mVisibleHeaderRects.get(mVisibleHeaderRects.keyAt(i));
       if (rect.contains(x, y)) {
-        int position = mHeaderRects.keyAt(i);
+        int position = mVisibleHeaderRects.keyAt(i);
         if (mVisibilityAdapter == null || mVisibilityAdapter.isPositionVisible(position)) {
           return position;
         }
@@ -169,5 +171,6 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
   public void invalidateHeaders() {
     mHeaderProvider.invalidate();
     mHeaderRects.clear();
+    mVisibleHeaderRects.clear();
   }
 }
