@@ -146,6 +146,10 @@ public class StickyRecyclerHeadersDecoration extends RecyclerView.ItemDecoration
     return -1;
   }
 
+  public Rect getHeaderRectAtPosition(int position) {
+      return mHeaderRects.get(position);
+  }
+
   /**
    * Gets the header view for the associated position.  If it doesn't exist yet, it will be
    * created, measured, and laid out.

@@ -1,10 +1,12 @@
 package com.timehop.stickyheadersrecyclerview;
 
+import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
 import android.view.View;
+import android.view.ViewGroup;
 
 public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTouchListener {
   private final GestureDetector mTapDetector;
@@ -62,15 +64,21 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
   }
 
   private class SingleTapDetector extends GestureDetector.SimpleOnGestureListener {
+
+    int clickX = 0;
+    int clickY = 0;
+
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-      int position = mDecor.findHeaderPositionUnder((int) e.getX(), (int) e.getY());
+      clickX = (int) e.getX();
+      clickY = (int) e.getY();
+      int position = mDecor.findHeaderPositionUnder(clickX, clickY);
       if (position != -1) {
         View headerView = mDecor.getHeaderView(mRecyclerView, position);
         long headerId = getAdapter().getHeaderId(position);
         mOnHeaderClickListener.onHeaderClick(headerView, position, headerId);
         mRecyclerView.playSoundEffect(SoundEffectConstants.CLICK);
-        headerView.onTouchEvent(e);
+        click(headerView, mDecor.getHeaderRectAtPosition(position));
         return true;
       }
       return false;
@@ -80,5 +88,29 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
     public boolean onDoubleTap(MotionEvent e) {
       return true;
     }
+
+    private boolean click(View view, Rect rect) {
+      if (view instanceof ViewGroup) {
+        ViewGroup viewGroup = (ViewGroup) view;
+          for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            Rect r = new Rect();
+            child.getHitRect(r);
+            r.offset(rect.left, rect.top);
+            if (click(child, r)) {
+              return true;
+            }
+          }
+        return false;
+      } else {
+        if (view.isClickable() && view.isEnabled()) {
+          if (rect.contains(clickX, clickY)) {
+            return view.performClick();
+          }
+        }
+        return false;
+      }
+    }
+
   }
 }
