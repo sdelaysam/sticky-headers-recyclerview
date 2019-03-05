@@ -3,8 +3,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion as Integer
-    buildToolsVersion rootProject.ext.buildToolsVersion as String
-
 
     defaultConfig {
         applicationId "com.timehop.stickyheadersrecyclerview.sample"
@@ -21,6 +19,5 @@ android {
 
 dependencies {
     implementation project(':library')
-    implementation "com.android.support:appcompat-v7:${rootProject.supportLibsVersion}"
-    implementation "com.android.support:recyclerview-v7:${rootProject.supportLibsVersion}"
+    implementation 'com.google.android.material:material:1.1.0-alpha03'
 }

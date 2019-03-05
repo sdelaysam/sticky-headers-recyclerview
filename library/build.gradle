@@ -2,7 +2,6 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion as Integer
-    buildToolsVersion rootProject.ext.buildToolsVersion as String
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion as Integer
@@ -17,7 +16,7 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:recyclerview-v7:${rootProject.supportLibsVersion}"
+    implementation 'com.google.android.material:material:1.1.0-alpha03'
 }
 
 task sourcesJar(type: Jar) {

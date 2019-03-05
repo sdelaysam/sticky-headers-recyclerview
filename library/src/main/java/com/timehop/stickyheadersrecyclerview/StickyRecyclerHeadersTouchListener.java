@@ -1,13 +1,15 @@
 package com.timehop.stickyheadersrecyclerview;
 
 import android.graphics.Rect;
-import android.support.annotation.IdRes;
-import android.support.v7.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.IdRes;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTouchListener {
   private final GestureDetector mTapDetector;
@@ -49,7 +51,7 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
   }
 
   @Override
-  public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent e) {
+  public boolean onInterceptTouchEvent(@NonNull RecyclerView view, @NonNull MotionEvent e) {
     if (this.mOnHeaderClickListener != null || this.mOnHeaderViewClickListener != null) {
       boolean tapDetectorResponse = this.mTapDetector.onTouchEvent(e);
       if (tapDetectorResponse) {
@@ -65,7 +67,9 @@ public class StickyRecyclerHeadersTouchListener implements RecyclerView.OnItemTo
   }
 
   @Override
-  public void onTouchEvent(RecyclerView view, MotionEvent e) { /* do nothing? */ }
+  public void onTouchEvent(@NonNull RecyclerView view, @NonNull MotionEvent e) {
+    this.mTapDetector.onTouchEvent(e);
+  }
 
   @Override public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
     // do nothing
